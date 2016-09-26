@@ -37,12 +37,12 @@
 * @description
 * Parse vertex intensity data from a string of text.
 * ```js
-* BrainBrowser.SurfaceViewer.parseIntensityData(data, "mniobj", function(intensity_data) {
+* BrainBrowser.SurfaceViewer.parseIntensityData(data, "mniobj", options, function(intensity_data) {
 *   // Manipulate intensity data object.
 * });
 * ```
 */
-BrainBrowser.SurfaceViewer.parseIntensityData = function(data, type, callback) {
+BrainBrowser.SurfaceViewer.parseIntensityData = function(data, type, options, callback) {
   "use strict";
 
   var worker_url_type = type + "_intensity";
@@ -64,5 +64,5 @@ BrainBrowser.SurfaceViewer.parseIntensityData = function(data, type, callback) {
     worker.terminate();
   });
 
-  worker.postMessage({ cmd: "parse", data: data });
+  worker.postMessage({ data: data, options: options });
 };
