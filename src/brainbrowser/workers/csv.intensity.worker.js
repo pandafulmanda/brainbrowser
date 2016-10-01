@@ -5,38 +5,91 @@
   self.addEventListener("message", function(e) {
     var input = e.data;
 
-    var result = parse(input.data, input.options);
-    self.postMessage(result, [result.values.buffer]);
+    var resultAndBuffers = parse(input.data, input.options);
+    self.postMessage.apply(self, resultAndBuffers);
   });
   
   function parse(string, options) {
-    var columnHeader = options.columnHeader;
     var result = {};
+    var buffers = [];
     var i, count, min, max;
   
     var stack = string.trim().split(/\n+/);
-    result.values = new Float32Array(stack.length - 1);
+    var header = separateToColumns(stack[0]);
 
-    var colIndex = getColumnIndex(columnHeader, stack[0]) || 0;
+    var target_intensities = [];
 
-    result.values[0] = parseFloat(stack[1].trim().split(/,/)[colIndex]);
-    min = result.values[0];
-    max = result.values[0];
-
-    for(i = 2, count = result.values.length; i <= count; i++) {
-      result.values[i - 1] = parseFloat(stack[i].trim().split(/,/)[colIndex]);
-      min = Math.min(min, result.values[i - 1]);
-      max = Math.max(max, result.values[i - 1]);
+    if(options.columns){
+      header.forEach(function(headerName, columentIndex){
+        if(options.columns.indexOf(headerName) > -1){
+          target_intensities.push({
+            name: headerName,
+            index: columentIndex
+          });
+        }
+      });
+    } else {
+      header.forEach(function(headerName, columentIndex){
+        target_intensities.push({
+          name: headerName,
+          index: columentIndex
+        });
+      });
     }
 
-    result.min = min;
-    result.max = max;
+    var numberOfIntensities = target_intensities.length;
+    var numberOfValues = stack.length - 1;
 
-    return result;
+    var firstRowValues = separateToColumns(stack[1]);
+    var lastRowValues = separateToColumns(stack[numberOfValues]);
+
+    for(var intensityIndex = 0; intensityIndex < numberOfIntensities; intensityIndex++) {
+      var column = target_intensities[intensityIndex];
+
+      result[column.name] = {
+        values: new Float32Array(numberOfValues - 1)
+      };
+
+      setInitialValue(result[column.name], firstRowValues[column.index]);
+    }
+
+    for(var rowIndex = 2; rowIndex < numberOfValues; rowIndex++) {
+      var rowValues = separateToColumns(stack[rowIndex]);
+
+      for(intensityIndex = 0; intensityIndex < numberOfIntensities; intensityIndex++) {
+        var column = target_intensities[intensityIndex];
+        setValue(result[column.name], rowIndex, rowValues[column.index]);
+      }
+    }
+
+    for(var intensityIndex = 0; intensityIndex < numberOfIntensities; intensityIndex++) {
+      var column = target_intensities[intensityIndex];
+      setValue(result[column.name], numberOfValues, lastRowValues[column.index]);
+
+      buffers.push(result[column.name].values.buffer);
+    }
+
+    return [result, buffers];
   }
  
-  function getColumnIndex(headerName, header) {
-    return header.split(/,/).indexOf(headerName);
+  function separateToRows(data){
+    return data.trim().split(/\n+/);
+  }
+
+  function separateToColumns(data){
+    return data.trim().split(/,/)
+  }
+
+  function setInitialValue(intensityObject, value){
+    intensityObject.values[0] = value;
+    intensityObject.min = value;
+    intensityObject.max = value;
+  }
+
+  function setValue(intensityObject, valueIndex, value){
+    intensityObject.values[valueIndex] = value;
+    intensityObject.min = Math.min(intensityObject.min, value);
+    intensityObject.max = Math.max(intensityObject.max, value);
   }
 
 })();

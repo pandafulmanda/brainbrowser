@@ -266,6 +266,12 @@ BrainBrowser.SurfaceViewer.modules.loading = function(viewer) {
     loader.loadFromURL(url, loadIntensityData, options);
   };
 
+  viewer.loadIntensityDataSetFromURL = function(url, options) {
+    options = checkBinary("intensity_data_types", options);
+
+    loader.loadFromURL(url, loadIntensityDataSet, options);
+  };
+
 
   /**
   * @doc function
@@ -385,94 +391,92 @@ BrainBrowser.SurfaceViewer.modules.loading = function(viewer) {
     var type           = options.format || "text";
     var parse_options  = options.parse  || {};
 
-    var name           = options.name   || filename;
-    var blend          = options.blend;
+    var old_range = getRange(options.model_name);
 
-    var model_name     = options.model_name;
-    var model_data     = viewer.model_data.get(model_name);
-    var intensity_data = model_data.intensity_data[0];
-
-    var old_range = {};
-
-    model_name = model_name || model_data.name;
-
-    if (viewer.getAttribute("fix_color_range") && intensity_data) {
-      old_range = {
-        min: intensity_data.range_min,
-        max: intensity_data.range_max
-      };
-    }
-
-    SurfaceViewer.parseIntensityData(text, type, parse_options, processIntensityData);
+    SurfaceViewer.parseIntensityData(text, type, parse_options, processIntensityData(old_range, options));
   }
 
   function loadIntensityDataSet(text, filename, options) {
     options            = options        || {};
-    var name           = options.name   || filename;
     var type           = options.format || "text";
-    var blend          = options.blend;
-    var model_name     = options.model_name;
-    var model_data     = viewer.model_data.get(model_name);
-    var intensity_data = model_data.intensity_data[0];
-    var parse_options   = options.parse  || {};
+    var parse_options  = options.parse  || {};
 
+    var old_range = getRange(options.model_name);
 
-    var old_range = {};
+    SurfaceViewer.parseIntensityData(text, type, parse_options, processIntensityDataSet(old_range, options));
+  }
 
-    model_name = model_name || model_data.name;
+  function getRange(model_name){
+    var intensity_data = viewer.model_data.get(model_name).intensity_data[0];
 
+    var currentRange = {};
     if (viewer.getAttribute("fix_color_range") && intensity_data) {
-      old_range = {
+      currentRange = {
         min: intensity_data.range_min,
         max: intensity_data.range_max
       };
     }
-
-    SurfaceViewer.parseIntensityData(text, type, parse_options, processIntensityDataSet);
+    return currentRange;
   }
 
-  function processIntensityDataSet(intensity_data_set) {
-    intensity_data_set.forEach(processIntensityData);
+  function processIntensityDataSet(old_range, options) {
+    // var processData = processIntensityData(old_range, options);
+    return function(intensity_data_set){
+      var intensities = Object.keys(intensity_data_set);
+      intensities.forEach(function(intensity_name){
+        options.name = intensity_name;
+        processIntensityData(old_range, options)(intensity_data_set[intensity_name]);
+      })
+    }
   }
 
-  function processIntensityData(intensity_data) {
-    var min;
-    var max;
+  function processIntensityData(old_range, options) {
+    return function(intensity_data){
+      var name           = options.name   || filename;
+      var blend          = options.blend;
 
-    if (viewer.getAttribute("fix_color_range") &&
-        old_range.min !== undefined && old_range.max !== undefined) {
-      min = old_range.min;
-      max = old_range.max;
-    } else {
-      min = options.min === undefined ? intensity_data.min : options.min;
-      max = options.max === undefined ? intensity_data.max : options.max;
-    }
+      var model_name     = options.model_name;
+      var model_data     = viewer.model_data.get(model_name);
+      model_name = model_name || model_data.name;
 
-    intensity_data.name = name;
+      var min;
+      var max;
 
-    if (!blend) {
-      model_data.intensity_data.length = 0;
-    }
+      if (viewer.getAttribute("fix_color_range") &&
+          old_range.min !== undefined && old_range.max !== undefined) {
+        min = old_range.min;
+        max = old_range.max;
+      } else {
+        min = options.min === undefined ? intensity_data.min : options.min;
+        max = options.max === undefined ? intensity_data.max : options.max;
+      }
 
-    model_data.intensity_data.push(intensity_data);
-    intensity_data.model_data = model_data;
+      intensity_data.name = name;
 
-    intensity_data.range_min = min;
-    intensity_data.range_max = max;
+      if (!blend) {
+        model_data.intensity_data.length = 0;
+      }
 
-    if (model_data.intensity_data.length > 1) {
-      viewer.blend(options.complete);
-    } else {
-      viewer.updateColors({
-        model_name: model_name,
-        complete: options.complete
+      model_data.intensity_data.push(intensity_data);
+      intensity_data.model_data = model_data;
+
+      intensity_data.range_min = min;
+      intensity_data.range_max = max;
+
+      if (model_data.intensity_data.length > 1) {
+        viewer.blend(options.complete);
+      } else {
+        viewer.updateColors({
+          model_name: model_name,
+          complete: options.complete
+        });
+      }
+
+      viewer.triggerEvent("loadintensitydata", {
+        model_data: model_data,
+        intensity_data: intensity_data
       });
     }
-
-    viewer.triggerEvent("loadintensitydata", {
-      model_data: model_data,
-      intensity_data: intensity_data
-    });
   }
 
   function loadColorMap(color_map) {
