@@ -420,11 +420,12 @@ BrainBrowser.SurfaceViewer.modules.loading = function(viewer) {
   }
 
   function processIntensityDataSet(old_range, options) {
-    // var processData = processIntensityData(old_range, options);
+
     return function(intensity_data_set){
       var intensities = Object.keys(intensity_data_set);
       intensities.forEach(function(intensity_name){
         options.name = intensity_name;
+        options.blend = true;
         processIntensityData(old_range, options)(intensity_data_set[intensity_name]);
       })
     }
