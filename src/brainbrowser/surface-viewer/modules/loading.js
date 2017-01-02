@@ -368,6 +368,9 @@ BrainBrowser.SurfaceViewer.modules.loading = function(viewer) {
     viewer.triggerEvent("clearscreen");
   };
 
+  viewer.getRange = getRange;
+  viewer.processIntensityDataSet = processIntensityDataSet;
+
 
   ////////////////////////////////////
   // PRIVATE FUNCTIONS
