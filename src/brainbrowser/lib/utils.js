@@ -136,12 +136,7 @@
     */
     getWorkerImportURL: function() {
       var worker_dir = BrainBrowser.config.get("worker_dir");
-      var import_url = document.location.origin + '/' + worker_dir;
-      var doc_href = document.location.href;
-      var slash_index = doc_href.lastIndexOf('/');
-      if (slash_index >= 0) {
-        import_url = doc_href.substring(0, slash_index + 1) + worker_dir;
-      }
+      var import_url = document.location.origin +  document.location.pathname + worker_dir;
       return import_url;
     },
 
