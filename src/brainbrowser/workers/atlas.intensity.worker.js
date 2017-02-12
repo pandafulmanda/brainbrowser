@@ -1,7 +1,6 @@
 (function parseAtlasIntensity() {
   "use strict";
 
-
   self.addEventListener("message", function(e) {
     var input = e.data;
 
@@ -34,6 +33,7 @@
     forEachProperty(function(property){
       result[property] = {};
       result[property].values = new Float32Array(atlas[atlasLink].values.length);
+      result[property].atlasValuesByVertex = atlas[atlasLink].values
       result[property].min = data[property].min;
       result[property].max = data[property].max;
     });
@@ -54,9 +54,7 @@
         handleEach(properties[propertyIndex]);
       }
     }
-
     self.postMessage.apply(self, [result, buffers]);
   });
 
 })();
-

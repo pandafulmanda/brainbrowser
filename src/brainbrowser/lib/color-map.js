@@ -301,7 +301,8 @@
         canvas  = createCanvas(colors, 20, 40, flip);
         context = canvas.getContext("2d");
 
-        context.fillStyle = "#FFA000";
+        //AK: I didn't like orange, changed to black
+        context.fillStyle = "#000000";
 
         // Min mark
         context.fillRect(0.5, 20, 1, 10);
