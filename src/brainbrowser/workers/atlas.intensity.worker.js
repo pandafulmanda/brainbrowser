@@ -1,4 +1,4 @@
-function parseAtlasIntensity() {
+(function parseAtlasIntensity() {
   "use strict";
 
   self.addEventListener("message", function(e) {

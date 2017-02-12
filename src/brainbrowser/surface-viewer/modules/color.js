@@ -109,7 +109,8 @@ BrainBrowser.SurfaceViewer.modules.color = function(viewer) {
 
     // Color updates will be asynchronous because they take a while.
     // New requests for color updates will replace old ones.
-    clearTimeout(timeout);
+    //AK: I don't like this. Commenting out the next line.
+    //clearTimeout(timeout);
 
     timeout = setTimeout(function() {
       if (blend) {
@@ -428,4 +429,3 @@ BrainBrowser.SurfaceViewer.modules.color = function(viewer) {
   }
 
 };
-

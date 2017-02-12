@@ -423,7 +423,6 @@ BrainBrowser.SurfaceViewer.modules.loading = function(viewer) {
   }
 
   function processIntensityDataSet(old_range, options) {
-
     return function(intensity_data_set){
       var intensities = Object.keys(intensity_data_set);
       intensities.forEach(function(intensity_name){
@@ -944,4 +943,3 @@ BrainBrowser.SurfaceViewer.modules.loading = function(viewer) {
   }
 
 };
-
